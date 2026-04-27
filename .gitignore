@@ -6,6 +6,8 @@ package-lock.json.bak
 dist
 dist-ssr
 *.local
+tsconfig.tsbuildinfo
+*.tsbuildinfo
 
 # Environment variables (実値が入っているので Git に上げない)
 .env
