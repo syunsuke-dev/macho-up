@@ -95,7 +95,7 @@ function SplashScreen() {
         <img
           src="/macho-up-logo.png"
           alt="macho up"
-          className="w-72 h-72 max-w-[80vw] max-h-[80vw] object-contain animate-pulse"
+          className="w-72 h-72 max-w-[80vw] max-h-[80vw] object-contain"
         />
         <div className="flex items-center gap-3 text-neutral-300">
           <span
