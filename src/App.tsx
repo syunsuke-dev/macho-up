@@ -80,9 +80,18 @@ function AuthGate({
 
 function SplashScreen() {
   return (
-    <div className="min-h-screen bg-neutral-950 flex flex-col items-center px-6 relative">
-      {/* メインコンテンツ: 画面上 1/4 あたりに配置 */}
-      <div className="flex flex-col items-center gap-6 mt-[15vh]">
+    <div
+      className="bg-neutral-950 flex flex-col items-center px-6"
+      style={{
+        // 100dvh = モバイルブラウザのチョームを考慮した動的ビューポート高
+        minHeight: '100dvh',
+        // セーフエリア + 余白
+        paddingTop: 'calc(env(safe-area-inset-top) + 8vh)',
+        paddingBottom: 'calc(env(safe-area-inset-bottom) + 1.5rem)',
+      }}
+    >
+      {/* メインコンテンツ: 上部寄り */}
+      <div className="flex flex-col items-center gap-6">
         <img
           src="/macho-up-logo.png"
           alt="macho up"
@@ -99,11 +108,11 @@ function SplashScreen() {
         </div>
       </div>
 
-      {/* クレジット: 画面下端 (セーフエリア対応) */}
-      <div
-        className="absolute left-0 right-0 bottom-0 text-center text-[11px] text-neutral-500 pb-4"
-        style={{ paddingBottom: 'calc(env(safe-area-inset-bottom) + 1rem)' }}
-      >
+      {/* スペーサー: クレジットを下端に押す */}
+      <div className="flex-1" />
+
+      {/* クレジット: 必ずビュー内に収まる */}
+      <div className="text-center text-xs text-neutral-500">
         Created by syunsuke kanno
       </div>
     </div>
