@@ -98,35 +98,7 @@ export function SettingsPage({ onShowGuide }: Props = {}) {
 
   return (
     <div className="space-y-4">
-      {/* プロフィール */}
-      <section className="rounded-2xl bg-neutral-900 border border-neutral-800 p-4">
-        <div className="text-xs text-neutral-400 uppercase mb-3 flex items-center gap-1">
-          <User size={12} /> プロフィール
-        </div>
-        <NameField />
-      </section>
-
-      {/* テーマ */}
-      <section className="rounded-2xl bg-neutral-900 border border-neutral-800 p-4">
-        <div className="text-xs text-neutral-400 uppercase mb-3">テーマ</div>
-        <div className="grid grid-cols-2 gap-2">
-          <ThemeOption
-            label="ダーク"
-            sublabel="少し青みのある黒"
-            icon={Moon}
-            active={state.user.theme === 'dark'}
-            onClick={() => setTheme('dark')}
-          />
-          <ThemeOption
-            label="ライト"
-            sublabel="白ベース"
-            icon={Sun}
-            active={state.user.theme === 'light'}
-            onClick={() => setTheme('light')}
-          />
-        </div>
-      </section>
-
+      {/* ステータス */}
       <section className="rounded-2xl bg-neutral-900 border border-neutral-800 p-4">
         <div className="text-xs text-neutral-400 uppercase mb-3">ステータス</div>
         <dl className="grid grid-cols-2 gap-3 text-sm">
@@ -155,6 +127,35 @@ export function SettingsPage({ onShowGuide }: Props = {}) {
             ))}
           </div>
         </dl>
+      </section>
+
+      {/* テーマ */}
+      <section className="rounded-2xl bg-neutral-900 border border-neutral-800 p-4">
+        <div className="text-xs text-neutral-400 uppercase mb-3">テーマ</div>
+        <div className="grid grid-cols-2 gap-2">
+          <ThemeOption
+            label="ダーク"
+            sublabel="少し青みのある黒"
+            icon={Moon}
+            active={state.user.theme === 'dark'}
+            onClick={() => setTheme('dark')}
+          />
+          <ThemeOption
+            label="ライト"
+            sublabel="白ベース"
+            icon={Sun}
+            active={state.user.theme === 'light'}
+            onClick={() => setTheme('light')}
+          />
+        </div>
+      </section>
+
+      {/* プロフィール */}
+      <section className="rounded-2xl bg-neutral-900 border border-neutral-800 p-4">
+        <div className="text-xs text-neutral-400 uppercase mb-3 flex items-center gap-1">
+          <User size={12} /> プロフィール
+        </div>
+        <NameField />
       </section>
 
       <section className="space-y-2">
