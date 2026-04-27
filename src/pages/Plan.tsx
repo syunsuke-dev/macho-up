@@ -257,42 +257,53 @@ function PlanEmptyState({
         </button>
       </section>
 
-      {/* コンセプト解説リンク */}
+      {/* コンセプト解説リンク (基本だけ) */}
       <section className="pt-2">
         <div className="text-[10px] text-neutral-500 uppercase mb-2">
           まずは知っておきたい
         </div>
         <div className="space-y-1.5">
           <ConceptCard
-            title="4サイクル制とは"
+            title="メニューって何個作るの？"
             body={
               <>
-                重量を <strong>75% → 80% → 85% → 50% (Deload)</strong>{' '}
-                の4段階で循環させることで効率的に筋力アップ。サイクル進行は手動
-                (ホームの「次へ」ボタン)。Deload は神経系の回復に重要。
+                <strong>1〜6 個</strong>{' '}
+                までお好きに。1つだけでも OK
+                ですし、Push/Pull/Legs のように分けても OK。
+                登録したメニューを順番に回すスケジュールが自動で作られます。
               </>
             }
           />
           <ConceptCard
-            title="ピリオダイゼーション ON/OFF"
+            title="基準KGって何を入れる？"
             body={
               <>
-                種目ごとに切替可能。<strong>ON</strong>{' '}
-                でサイクル係数 (75/80/85/50%) を適用、
-                <strong>OFF</strong> で常に基準KGの 100%。
-                ⚠️ 4サイクル目だけは ON が1つでもあれば全種目 50% に統一されます (Deload 確実化)。
+                普段やっている <strong>無理なくこなせる重量</strong>{' '}
+                を入れてください。例えばベンチプレスを 60kg×5回 でやっているなら 60。
+                あとからプラン画面でいつでも変更できます。
               </>
             }
           />
           <ConceptCard
-            title="変動セットとは"
+            title="オフ日の設定は？"
             body={
               <>
-                同セッション内で重量を変える方式。
-                <br />
-                <strong>ストレート</strong> (全セット同重量) /{' '}
-                <strong>アセンディング</strong> (前セットから %増) /{' '}
-                <strong>ドロップ</strong> (前セットから %減)。
+                各メニュー後の休養日数を 0〜7 日で指定できます。
+                例: Push の後 1 日オフ → Pull の後 1 日オフ → Legs の後 2 日オフ、など。
+                プラン上部の「ローテーション & オフ日数」で調整できます。
+              </>
+            }
+          />
+          <ConceptCard
+            title="📈 ピリオダイゼーションって何？(任意)"
+            body={
+              <>
+                計画的に重量を上げ下げする筋トレの手法 (4サイクル制で 75/80/85/50%)。
+                <strong className="text-amber-300">
+                  使わなくて全く問題ありません
+                </strong>
+                。デフォルトで OFF なので意識せず使えます。
+                興味あれば右下「詳しい使い方ガイド」の「応用機能」セクションへ。
               </>
             }
           />
@@ -820,28 +831,30 @@ function ExerciseEditor({
         </Field>
       </div>
 
-      {/* ピリオダイゼーション */}
+      {/* ピリオダイゼーション (任意機能) */}
       <label className="flex items-center justify-between bg-neutral-900 rounded px-2 py-1.5">
         <span className="text-xs flex items-center gap-1">
           ピリオダイゼーション
+          <span className="text-[9px] text-neutral-500 border border-neutral-700 rounded px-1 py-0.5">
+            任意
+          </span>
           <HelpIcon
-            title="ピリオダイゼーション"
+            title="ピリオダイゼーション (任意)"
             body={
               <>
                 <p>
-                  この種目に <strong>4サイクル制</strong>{' '}
-                  (75/80/85/50%) を適用するか:
+                  <strong className="text-amber-300">
+                    使わなくて全く問題ない応用機能
+                  </strong>
+                  です。OFF のままなら入力した重量がそのまま表示されます。
                 </p>
-                <ul className="list-disc list-inside text-neutral-300">
-                  <li>
-                    <strong>ON</strong>: サイクルに応じて重量が変動 (主にコンパウンド種目)
-                  </li>
-                  <li>
-                    <strong>OFF</strong>: 常に基準KGの 100% (アイソレーション種目向き)
-                  </li>
-                </ul>
-                <p className="text-neutral-400">
-                  ⚠️ 4サイクル目は ON が1つでもあれば全種目 50% (Deload確実化)。
+                <p className="mt-2">
+                  ON にすると、計画的に重量を上げ下げする「4サイクル制」
+                  (75% → 80% → 85% → 50% Deload) が適用されます。
+                  本格的に筋力を伸ばしたい人向け。
+                </p>
+                <p className="text-neutral-400 mt-2">
+                  詳しくは「設定」→「使い方ガイド」→「応用機能」をご覧ください。
                 </p>
               </>
             }

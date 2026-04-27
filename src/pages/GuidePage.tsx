@@ -40,25 +40,19 @@ export function GuidePage({ onClose }: Props) {
           <Section title="macho up とは">
             <p>
               <strong className="text-amber-300">macho up</strong>{' '}
-              は「ロジカルなトレーニング計画」を自動で作って管理するためのスマホ向けアプリです。
+              はトレーニングメニューを作成・管理するためのスマホ向けアプリです。
             </p>
             <ul className="list-disc list-inside space-y-1 text-neutral-300">
+              <li>最大6つのメニュー（ルーティン）を登録</li>
+              <li>ローテーションで自動スケジュール作成</li>
+              <li>セット毎の重量・レップを記録</li>
+              <li>履歴をグラフ化（最大3種目を比較）</li>
+              <li>クラウド保存で複数デバイス同期</li>
               <li>
-                <strong>4サイクル・ピリオダイゼーション</strong>{' '}
-                で重量を自動算出
+                <span className="text-neutral-400">
+                  （任意）ピリオダイゼーション機能で重量を自動変動
+                </span>
               </li>
-              <li>
-                最大6つのメニューを <strong>ローテーション</strong>{' '}
-                で自動スケジュール
-              </li>
-              <li>
-                <strong>変動セット</strong>{' '}
-                (ストレート/アセンディング/ドロップ) に対応
-              </li>
-              <li>
-                重量・レップを記録して <strong>グラフ化</strong>
-              </li>
-              <li>データはクラウド保存、複数デバイスで同期</li>
             </ul>
           </Section>
 
@@ -86,12 +80,7 @@ export function GuidePage({ onClose }: Props) {
             <Accordion icon={<HomeIcon size={16} />} title="ホーム">
               <ul className="list-disc list-inside space-y-1">
                 <li>
-                  <strong>現在のサイクル</strong> (75% / 80% / 85% / Deload 50%)
-                  をアンバーカードで表示。「次へ」ボタンで進めます
-                </li>
-                <li>
-                  <strong>今日のメニュー</strong> — 種目ごとのサイクル適用済み
-                  重量を表示
+                  <strong>今日のメニュー</strong> — 種目ごとの重量・セット数を表示
                 </li>
                 <li>
                   <strong>今週のスケジュール</strong>{' '}
@@ -103,6 +92,9 @@ export function GuidePage({ onClose }: Props) {
                 <li>
                   <strong>リスケ</strong>{' '}
                   ボタン — 今日できなかった時に「全体ずらす」or「その日のみ」を選択
+                </li>
+                <li className="text-neutral-400">
+                  ※ ピリオダイゼーションを使う場合のみ「現在のサイクル」カードが上部に表示されます
                 </li>
               </ul>
             </Accordion>
@@ -118,8 +110,6 @@ export function GuidePage({ onClose }: Props) {
                   各メニューを開くと <strong>種目編集</strong>:
                   <br />
                   種目名 / 基準KG / セット数 / レップ数
-                  <br />
-                  ピリオダイゼーション ON/OFF / 変動セット種別 / 増減%
                 </li>
                 <li>
                   「テンプレート / 既存種目から追加」 — 部位別 (下半身・胸・肩・腕・背中)
@@ -127,6 +117,9 @@ export function GuidePage({ onClose }: Props) {
                 </li>
                 <li>
                   上部「ローテーション & オフ日数」で各メニュー後の休養日を設定
+                </li>
+                <li className="text-neutral-400">
+                  ※ ピリオダイゼーション・変動セットは応用機能(後述)。OFFのままで普通に使えます
                 </li>
               </ul>
             </Accordion>
@@ -195,12 +188,43 @@ export function GuidePage({ onClose }: Props) {
             </Accordion>
           </Section>
 
-          {/* 4. コアロジック解説 */}
-          <Section title="コアロジック解説">
-            <Accordion title="4サイクル・ピリオダイゼーションとは" defaultOpen>
+          {/* 4. Tips (普段使いの基本ノウハウ) */}
+          <Section title="Tips（普段使い）">
+            <ul className="list-disc list-inside space-y-2 text-neutral-300">
+              <li>
+                <strong>基準KGは「無理なくこなせる重量」を入れる</strong>
+              </li>
+              <li>
+                <strong>記録できなかった日は素直にリスケ</strong>{' '}
+                — 完璧主義で挫折するより柔軟に
+              </li>
+              <li>
+                <strong>グラフで停滞を見つけたら基準KGを再調整</strong>
+              </li>
+              <li>
+                <strong>CSV エクスポート</strong>{' '}
+                を月1で保存しておくと、もし問題があっても安心
+              </li>
+              <li>
+                <strong>ホーム画面に追加</strong>すると
+                ネイティブアプリ風に起動できます (PWA)
+              </li>
+            </ul>
+          </Section>
+
+          {/* 5. 応用機能 (任意) */}
+          <Section title="応用機能（使わなくてOK）">
+            <p className="text-xs text-neutral-400 leading-relaxed">
+              以下は <strong>知らなくても普通に使える</strong>{' '}
+              応用機能です。慣れてきて「重量を計画的に上げ下げしたい」と思ったら覗いてみてください。
+              特に興味なければ <strong>OFF のまま無視で OK</strong>。
+            </p>
+
+            <Accordion title="📈 ピリオダイゼーション (任意)">
               <p>
-                計画的にトレーニング負荷を変動させる方法論。同じ重量で続けるより
-                効率的に筋力アップできます。本アプリでは以下の{' '}
+                <strong>ピリオダイゼーション</strong>{' '}
+                とは、計画的にトレーニング負荷を変動させて
+                効率良く筋力を伸ばす手法のこと。本アプリでは{' '}
                 <strong>4 段階を 1 ループ</strong> で繰り返します:
               </p>
               <table className="w-full text-xs font-mono mt-2 border-collapse">
@@ -235,37 +259,26 @@ export function GuidePage({ onClose }: Props) {
                 </tbody>
               </table>
               <p className="mt-2 text-neutral-300">
-                4サイクル目を終えるとサイクル1に自動で戻ります。
-                サイクルを進めるには <strong>ホームの「次へ」ボタン</strong>{' '}
-                を手動で押します。
+                <strong>使い方</strong>: 各種目編集画面の「ピリオダイゼーション」スイッチを ON にすると、
+                その種目だけサイクル係数が適用されます。
+                サイクル進行はホームの「次へ」ボタンを押すと進みます。
+              </p>
+              <p className="mt-1 text-neutral-400">
+                ※ ⚠️ ルーティン内に1つでも ON があると、4サイクル目だけは
+                OFF の種目も含めて全種目 50% に統一されます (Deload を確実にするため)。
+              </p>
+              <p className="mt-2 text-neutral-300">
+                <strong>知らない人へ向けて</strong>:
+                上記の話が「???」なら使わなくて大丈夫です。
+                スイッチを OFF のままなら、入力した重量がそのまま表示されるだけのシンプル動作になります。
               </p>
             </Accordion>
 
-            <Accordion title="ピリオダイゼーション ON/OFF">
-              <p>
-                各種目ごとに ON/OFF を切替できます。
-              </p>
-              <ul className="list-disc list-inside mt-1 space-y-1">
-                <li>
-                  <strong>ON</strong>: 基準KG × サイクル係数 (75/80/85/50%)
-                  が適用される。コンパウンド種目にお勧め
-                </li>
-                <li>
-                  <strong>OFF</strong>: 常に基準KGの 100% で出力。アイソレーション種目向き
-                </li>
-                <li>
-                  ⚠️ <strong>4サイクル目だけ特別ルール</strong>:
-                  ルーティン内に1つでもONの種目があれば、OFFの種目も含めて
-                  全種目が 50% に統一されます (Deload を確実にするため)
-                </li>
-              </ul>
-            </Accordion>
-
-            <Accordion title="変動セット (ストレート / アセンディング / ドロップ)">
+            <Accordion title="🔀 変動セット (任意)">
               <p>1セッション内でセットごとに重量を変えるパターン:</p>
               <ul className="list-disc list-inside mt-1 space-y-1">
                 <li>
-                  <strong>ストレート</strong>: 全セット同じ重量 (基本)
+                  <strong>ストレート</strong>: 全セット同じ重量 (基本・デフォルト)
                 </li>
                 <li>
                   <strong>アセンディング</strong>:
@@ -277,11 +290,11 @@ export function GuidePage({ onClose }: Props) {
                 </li>
               </ul>
               <p className="mt-2 text-neutral-300">
-                重量は全て 0.5 kg 単位で自動丸めされます。
+                ストレートのままで普通に使えるので、こだわりが無い人は触らなくて OK。
               </p>
             </Accordion>
 
-            <Accordion title="リスケの 2 種類">
+            <Accordion title="🔄 リスケの 2 種類">
               <p>
                 今日できなかった時に、ホームの「リスケ」ボタンから 2 種類選べる:
               </p>
@@ -298,37 +311,19 @@ export function GuidePage({ onClose }: Props) {
             </Accordion>
           </Section>
 
-          {/* 5. Tips */}
-          <Section title="Tips">
-            <ul className="list-disc list-inside space-y-2 text-neutral-300">
-              <li>
-                <strong>基準KGは「ちょっと余裕がある重量」を入れる</strong>{' '}
-                — 75%でラクすぎるならむしろちょうど良い。85%で潰れるなら少し落とす
-              </li>
-              <li>
-                <strong>サイクルを進めるタイミング</strong>{' '}
-                — 「全種目を成功させた後」または「1〜2週間使った後」がおすすめ
-              </li>
-              <li>
-                <strong>4サイクル目 (Deload) は必ず守る</strong>{' '}
-                — 神経系の回復で次のサイクル1で記録が伸びる
-              </li>
-              <li>
-                <strong>記録できなかった日は素直にリスケ</strong>{' '}
-                — 完璧主義で挫折するより、柔軟に
-              </li>
-              <li>
-                <strong>グラフで停滞を見つけたら基準KGを再調整</strong>
-              </li>
-              <li>
-                <strong>CSV エクスポート</strong>{' '}
-                を月1で保存しておくと、もし問題があっても安心
-              </li>
-            </ul>
-          </Section>
-
           {/* 6. FAQ */}
           <Section title="よくある質問">
+            <Accordion title="ピリオダイゼーションって何ですか？必須？">
+              <p>
+                計画的に重量を上げ下げする筋トレの手法です。
+                <strong>使わなくて全く問題ありません</strong>。
+                デフォルトで OFF になっているので、意識せずシンプルに使えます。
+              </p>
+              <p className="mt-1 text-neutral-400">
+                興味があれば「応用機能」セクションを参照。
+              </p>
+            </Accordion>
+
             <Accordion title="他人にデータを見られませんか？">
               見られません。Supabase の Row Level Security
               により「自分のメアドでログインしている時だけ自分のデータが見える」設計です。
