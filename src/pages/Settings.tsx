@@ -1,7 +1,9 @@
-import { BookOpen, Download, LogOut, Moon, RotateCcw, Sun } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { BookOpen, Download, LogOut, Moon, RotateCcw, Sun, User } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { useAuth } from '../context/AuthContext';
 import { CYCLE_LABELS } from '../lib/periodization';
+import { COMPARISONS, calculateTotalVolume } from '../lib/achievements';
 import type { Theme } from '../types';
 
 interface Props {
@@ -70,19 +72,7 @@ export function SettingsPage({ onShowGuide }: Props = {}) {
   );
 
   // 総重量: 完了済みセットの (重量 × レップ) を全て合算 (kg)
-  const totalVolume = state.logs.reduce(
-    (sum, l) =>
-      sum +
-      l.exercises.reduce(
-        (s, e) =>
-          s +
-          e.setLogs
-            .filter((st) => st.completed)
-            .reduce((ss, st) => ss + st.weight * st.reps, 0),
-        0,
-      ),
-    0,
-  );
+  const totalVolume = calculateTotalVolume(state.logs);
 
   /** 表示上限 (999,999,999,999 = 12桁) */
   const MAX_DISPLAY = 999_999_999_999;
@@ -104,20 +94,18 @@ export function SettingsPage({ onShowGuide }: Props = {}) {
     if (ratio < 100) return `${ratio.toFixed(2)} 個分`;
     return `${Math.round(ratio).toLocaleString()} 個分`;
   };
-  // 換算対象 (重い順)
-  const COMPARISONS: { name: string; emoji: string; kg: number; unit: string; color: string }[] = [
-    { name: '自由の女神', emoji: '🗽', kg: 225_000, unit: '225t/個', color: 'text-amber-300/90' },
-    { name: 'モアイ象', emoji: '🗿', kg: 50_000, unit: '50t/個', color: 'text-emerald-300/90' },
-    { name: 'スクールバス', emoji: '🚌', kg: 10_000, unit: '10t/個', color: 'text-yellow-300/90' },
-    { name: 'グランドピアノ', emoji: '🎹', kg: 500, unit: '500kg/個', color: 'text-violet-300/90' },
-    { name: 'ダイオウイカ', emoji: '🦑', kg: 200, unit: '200kg/個', color: 'text-sky-300/90' },
-    { name: 'パンダ', emoji: '🐼', kg: 100, unit: '100kg/個', color: 'text-fuchsia-300/90' },
-  ];
-
   const setTheme = (t: Theme) => dispatch({ type: 'SET_THEME', theme: t });
 
   return (
     <div className="space-y-4">
+      {/* プロフィール */}
+      <section className="rounded-2xl bg-neutral-900 border border-neutral-800 p-4">
+        <div className="text-xs text-neutral-400 uppercase mb-3 flex items-center gap-1">
+          <User size={12} /> プロフィール
+        </div>
+        <NameField />
+      </section>
+
       {/* テーマ */}
       <section className="rounded-2xl bg-neutral-900 border border-neutral-800 p-4">
         <div className="text-xs text-neutral-400 uppercase mb-3">テーマ</div>
@@ -225,6 +213,50 @@ export function SettingsPage({ onShowGuide }: Props = {}) {
         macho up · v0.2.0 · データは Supabase に保存されデバイス間で同期されます
       </section>
     </div>
+  );
+}
+
+// ===== ユーザー名入力 (commit on blur / Enter) =====
+
+function NameField() {
+  const { state, dispatch } = useApp();
+  const [text, setText] = useState(state.user.name ?? '');
+
+  // 外部から user.name が変わったら同期
+  useEffect(() => {
+    setText(state.user.name ?? '');
+  }, [state.user.name]);
+
+  const commit = () => {
+    const trimmed = text.trim();
+    const next = trimmed.length === 0 ? 'You' : trimmed;
+    if (next !== state.user.name) {
+      dispatch({ type: 'SET_NAME', name: next });
+    }
+    setText(next);
+  };
+
+  return (
+    <label className="block">
+      <span className="text-[10px] text-neutral-500 uppercase">ユーザー名</span>
+      <input
+        type="text"
+        value={text}
+        maxLength={30}
+        onChange={(e) => setText(e.target.value)}
+        onBlur={commit}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter') {
+            (e.target as HTMLInputElement).blur();
+          }
+        }}
+        placeholder="あなたの名前 (空欄なら 'You')"
+        className="mt-1 w-full h-11 bg-neutral-950 border border-neutral-700 rounded-lg px-3 text-sm focus:outline-none focus:border-amber-500"
+      />
+      <span className="text-[10px] text-neutral-500 mt-1 block">
+        ホーム画面に表示されます。確定はフォーカスを外すか Enter キー。
+      </span>
+    </label>
   );
 }
 

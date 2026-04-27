@@ -7,6 +7,10 @@ import {
   routineHasAnyPeriodization,
 } from '../lib/periodization';
 import {
+  calculateTotalVolume,
+  getAchievedComparisons,
+} from '../lib/achievements';
+import {
   getEntryByDate,
   getUpcomingEntries,
   todayISO,
@@ -32,6 +36,10 @@ export function HomePage({ onGoLog }: Props) {
   // リスケのモード選択ピッカー
   const [reschedulePickerOpen, setReschedulePickerOpen] = useState(false);
 
+  // 総重量と達成バッジ
+  const totalVolume = calculateTotalVolume(state.logs);
+  const achieved = getAchievedComparisons(totalVolume);
+
   const recentLogs = [...state.logs].sort((a, b) => b.date.localeCompare(a.date)).slice(0, 3);
 
   // 今日のルーティン内でいずれかの種目がピリオダイゼーション有効なら
@@ -49,6 +57,30 @@ export function HomePage({ onGoLog }: Props) {
 
   return (
     <div className="space-y-5">
+      {/* ユーザー名 + 達成バッジ */}
+      <section className="flex items-center justify-between gap-2 -mb-1">
+        <div className="flex items-baseline gap-1.5 min-w-0">
+          <span className="text-xs text-neutral-400">ようこそ、</span>
+          <span className="font-bold text-base truncate">
+            {state.user.name || 'You'}
+          </span>
+          <span className="text-xs text-neutral-400">さん</span>
+        </div>
+        {achieved.length > 0 && (
+          <div className="flex gap-0.5 text-base flex-shrink-0">
+            {achieved.map((c) => (
+              <span
+                key={c.name}
+                title={`${c.name} 達成 (1個分=${c.unit})`}
+                className="leading-none"
+              >
+                {c.emoji}
+              </span>
+            ))}
+          </div>
+        )}
+      </section>
+
       {/* サイクル表示 (今日のメニューに ピリオダイゼーション ON の種目が
           1つ以上ある場合のみ表示) */}
       {todayHasPeriodization && (

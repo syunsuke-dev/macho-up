@@ -43,6 +43,7 @@ type Action =
   | { type: 'RESET' }
   | { type: 'ADVANCE_CYCLE' }
   | { type: 'SET_THEME'; theme: Theme }
+  | { type: 'SET_NAME'; name: string }
   | { type: 'UPSERT_EXERCISE'; exercise: Exercise }
   | { type: 'DELETE_EXERCISE'; id: string }
   | { type: 'UPSERT_ROUTINE'; routine: Routine }
@@ -100,6 +101,8 @@ function reducer(state: PersistedState, action: Action): PersistedState {
       };
     case 'SET_THEME':
       return { ...state, user: { ...state.user, theme: action.theme } };
+    case 'SET_NAME':
+      return { ...state, user: { ...state.user, name: action.name } };
     case 'UPSERT_EXERCISE': {
       const i = state.exercises.findIndex((e) => e.id === action.exercise.id);
       const list =
@@ -211,6 +214,7 @@ async function persistAction(
       return;
     case 'ADVANCE_CYCLE':
     case 'SET_THEME':
+    case 'SET_NAME':
       await saveUser(userId, next.user);
       return;
     case 'UPSERT_EXERCISE':
