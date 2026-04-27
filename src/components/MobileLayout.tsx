@@ -20,16 +20,19 @@ export function MobileLayout({ active, onChangeTab, title, right, children }: Pr
     <div className="min-h-screen bg-neutral-950 text-neutral-100">
       <div className="max-w-md mx-auto min-h-screen flex flex-col relative">
         <header
-          className="sticky top-0 z-20 bg-neutral-950/95 backdrop-blur border-b border-neutral-800 px-4 h-14 flex items-center justify-between"
+          className="sticky top-0 z-20 bg-neutral-950/95 backdrop-blur border-b border-neutral-800 px-3 h-14 flex items-center justify-between"
           style={{ paddingTop: 'env(safe-area-inset-top)' }}
         >
-          <h1 className="text-lg font-bold tracking-tight">
-            <span className="text-amber-400">macho</span>{' '}
-            <span className="text-neutral-100">up</span>
-            <span className="ml-2 text-xs font-normal text-neutral-400">
-              / {title}
+          <div className="flex items-center gap-2 min-w-0">
+            <img
+              src="/macho-up-logo.png"
+              alt="macho up"
+              className="w-9 h-9 object-contain flex-shrink-0 rounded-md"
+            />
+            <span className="text-sm font-semibold text-neutral-300 truncate">
+              {title}
             </span>
-          </h1>
+          </div>
           <div>{right}</div>
         </header>
 
