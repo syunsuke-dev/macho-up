@@ -80,18 +80,31 @@ function AuthGate({
 
 function SplashScreen() {
   return (
-    <div className="min-h-screen bg-neutral-950 flex flex-col items-center justify-center gap-6 px-6">
-      <img
-        src="/macho-up-logo.png"
-        alt="macho up"
-        className="w-72 h-72 max-w-[80vw] max-h-[80vw] object-contain animate-pulse"
-      />
-      <div className="flex items-center gap-3 text-neutral-300">
-        <span
-          className="inline-block w-6 h-6 rounded-full border-[3px] border-neutral-700 border-t-amber-400 animate-spin"
-          aria-hidden="true"
+    <div className="min-h-screen bg-neutral-950 flex flex-col items-center px-6 relative">
+      {/* メインコンテンツ: 画面上 1/4 あたりに配置 */}
+      <div className="flex flex-col items-center gap-6 mt-[15vh]">
+        <img
+          src="/macho-up-logo.png"
+          alt="macho up"
+          className="w-72 h-72 max-w-[80vw] max-h-[80vw] object-contain animate-pulse"
         />
-        <span className="text-base font-semibold tracking-wide">Loading...</span>
+        <div className="flex items-center gap-3 text-neutral-300">
+          <span
+            className="inline-block w-6 h-6 rounded-full border-[3px] border-neutral-700 border-t-amber-400 animate-spin"
+            aria-hidden="true"
+          />
+          <span className="text-base font-semibold tracking-wide">
+            Loading...
+          </span>
+        </div>
+      </div>
+
+      {/* クレジット: 画面下端 (セーフエリア対応) */}
+      <div
+        className="absolute left-0 right-0 bottom-0 text-center text-[11px] text-neutral-500 pb-4"
+        style={{ paddingBottom: 'calc(env(safe-area-inset-bottom) + 1rem)' }}
+      >
+        Created by syunsuke kanno
       </div>
     </div>
   );
