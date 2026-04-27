@@ -1,10 +1,14 @@
-import { Download, LogOut, Moon, RotateCcw, Sun } from 'lucide-react';
+import { BookOpen, Download, LogOut, Moon, RotateCcw, Sun } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { useAuth } from '../context/AuthContext';
 import { CYCLE_LABELS } from '../lib/periodization';
 import type { Theme } from '../types';
 
-export function SettingsPage() {
+interface Props {
+  onShowGuide?: () => void;
+}
+
+export function SettingsPage({ onShowGuide }: Props = {}) {
   const { state, dispatch, exerciseMap, routineMap } = useApp();
   const { user, signOut } = useAuth();
 
@@ -182,6 +186,23 @@ export function SettingsPage() {
           <RotateCcw size={16} /> 全データを初期化
         </button>
       </section>
+
+      {/* ヘルプ */}
+      {onShowGuide && (
+        <section className="rounded-2xl bg-neutral-900 border border-neutral-800 p-3">
+          <button
+            type="button"
+            onClick={onShowGuide}
+            className="w-full flex items-center justify-between text-sm text-neutral-200 hover:text-amber-300"
+          >
+            <span className="flex items-center gap-2">
+              <BookOpen size={14} className="text-amber-400" />
+              使い方ガイド
+            </span>
+            <span className="text-neutral-500">→</span>
+          </button>
+        </section>
+      )}
 
       {/* アカウント */}
       <section className="rounded-2xl bg-neutral-900 border border-neutral-800 p-4">

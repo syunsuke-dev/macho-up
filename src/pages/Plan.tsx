@@ -1,10 +1,11 @@
 import { useState } from 'react';
-import { Check, ChevronDown, ChevronUp, Plus, Trash2, RefreshCw } from 'lucide-react';
+import { BookOpen, Check, ChevronDown, ChevronUp, Plus, Sparkles, Trash2, RefreshCw } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { uid } from '../lib/storage';
 import { defaultVariation } from '../lib/periodization';
 import { todayISO } from '../lib/schedule';
 import { NumberInput } from '../components/NumberInput';
+import { HelpIcon } from '../components/HelpIcon';
 import {
   BODY_PARTS,
   EXERCISE_TEMPLATES,
@@ -13,7 +14,11 @@ import {
 } from '../lib/exerciseTemplates';
 import type { Exercise, Routine, SetMode } from '../types';
 
-export function PlanPage() {
+interface PlanPageProps {
+  onShowGuide?: () => void;
+}
+
+export function PlanPage({ onShowGuide }: PlanPageProps = {}) {
   const { state, dispatch } = useApp();
   const [openRoutineId, setOpenRoutineId] = useState<string | null>(null);
 
@@ -32,6 +37,83 @@ export function PlanPage() {
     };
     dispatch({ type: 'UPSERT_ROUTINE', routine: r });
     setOpenRoutineId(r.id);
+  };
+
+  /**
+   * クイックスタート: Push/Pull/Legs の3メニュー構成をテンプレから自動作成
+   */
+  const quickStart = () => {
+    const now = new Date().toISOString();
+
+    // 各部位からピックする種目 (テンプレ先頭から数件ずつ)
+    const pickFromBodyPart = (
+      part: BodyPart,
+      count: number,
+    ): Exercise[] =>
+      EXERCISE_TEMPLATES[part].slice(0, count).map((t) => ({
+        id: uid(),
+        name: t.name,
+        baseWeight: t.baseWeight,
+        sets: t.sets,
+        reps: t.reps,
+        periodizationEnabled: false,
+        variation: defaultVariation(),
+        createdAt: now,
+      }));
+
+    const pushExercises = [
+      ...pickFromBodyPart('胸', 3),
+      ...pickFromBodyPart('肩', 2),
+      ...pickFromBodyPart('腕', 1),
+    ];
+    const pullExercises = [
+      ...pickFromBodyPart('背中', 4),
+      ...pickFromBodyPart('腕', 1),
+    ];
+    const legsExercises = pickFromBodyPart('下半身', 5);
+
+    const pushRoutine: Routine = {
+      id: uid(),
+      name: 'Push (胸・肩・三頭)',
+      order: 0,
+      exerciseIds: pushExercises.map((e) => e.id),
+      enabled: true,
+      createdAt: now,
+    };
+    const pullRoutine: Routine = {
+      id: uid(),
+      name: 'Pull (背中・二頭)',
+      order: 1,
+      exerciseIds: pullExercises.map((e) => e.id),
+      enabled: true,
+      createdAt: now,
+    };
+    const legsRoutine: Routine = {
+      id: uid(),
+      name: 'Legs (下半身)',
+      order: 2,
+      exerciseIds: legsExercises.map((e) => e.id),
+      enabled: true,
+      createdAt: now,
+    };
+
+    // 種目を全て追加 (UPSERT_EXERCISE)
+    [...pushExercises, ...pullExercises, ...legsExercises].forEach((ex) => {
+      dispatch({ type: 'UPSERT_EXERCISE', exercise: ex });
+    });
+
+    // ルーティンを追加
+    dispatch({ type: 'UPSERT_ROUTINE', routine: pushRoutine });
+    dispatch({ type: 'UPSERT_ROUTINE', routine: pullRoutine });
+    dispatch({ type: 'UPSERT_ROUTINE', routine: legsRoutine });
+
+    // スケジュールを生成
+    dispatch({
+      type: 'REGEN_SCHEDULE',
+      rotation: [pushRoutine.id, pullRoutine.id, legsRoutine.id],
+      offDays: [1, 1, 1],
+      startDate: todayISO(),
+    });
   };
 
   const regenerate = () => {
@@ -55,6 +137,17 @@ export function PlanPage() {
     });
     alert('スケジュールを再生成しました');
   };
+
+  // 初回 (メニューが空) の場合はオンボーディング画面を表示
+  if (state.routines.length === 0) {
+    return (
+      <PlanEmptyState
+        onQuickStart={quickStart}
+        onManualStart={addRoutine}
+        onShowGuide={onShowGuide}
+      />
+    );
+  }
 
   return (
     <div className="space-y-4">
@@ -101,6 +194,147 @@ export function PlanPage() {
           </button>
         )}
       </section>
+    </div>
+  );
+}
+
+// ===== 初回オンボーディング (メニューが空のとき) =====
+
+function PlanEmptyState({
+  onQuickStart,
+  onManualStart,
+  onShowGuide,
+}: {
+  onQuickStart: () => void;
+  onManualStart: () => void;
+  onShowGuide?: () => void;
+}) {
+  return (
+    <div className="space-y-5 pt-4">
+      <section className="text-center">
+        <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-amber-500/15 border border-amber-500/30 mb-3">
+          <Sparkles size={26} className="text-amber-400" />
+        </div>
+        <h2 className="text-base font-bold mb-1">
+          まずはトレーニングメニューを作りましょう
+        </h2>
+        <p className="text-xs text-neutral-400 leading-relaxed px-2">
+          最大6つまでメニューを登録できます。
+          <br />
+          おすすめプラン or 自分で1から、お好きな方を選んでください。
+        </p>
+      </section>
+
+      <section className="space-y-2">
+        <button
+          type="button"
+          onClick={onQuickStart}
+          className="w-full p-4 rounded-2xl bg-gradient-to-br from-amber-500 to-amber-600 text-neutral-950 text-left active:scale-[0.99] transition shadow-lg shadow-amber-500/20"
+        >
+          <div className="flex items-center gap-2 font-bold mb-1">
+            <Sparkles size={16} /> おすすめプランで始める
+          </div>
+          <div className="text-[11px] leading-relaxed opacity-80">
+            Push (胸・肩・三頭) / Pull (背中・二頭) / Legs (下半身) の
+            3メニュー構成を即座に作成。<br />
+            あとから自由に編集できます。
+          </div>
+        </button>
+
+        <button
+          type="button"
+          onClick={onManualStart}
+          className="w-full p-4 rounded-2xl bg-neutral-900 border border-neutral-800 text-left active:scale-[0.99] transition"
+        >
+          <div className="flex items-center gap-2 font-bold mb-1 text-neutral-100">
+            <Plus size={16} /> 自分で1から作る
+          </div>
+          <div className="text-[11px] text-neutral-400 leading-relaxed">
+            空のメニューを作成 → 種目をテンプレートまたは手動で追加。
+            <br />
+            こだわり派におすすめ。
+          </div>
+        </button>
+      </section>
+
+      {/* コンセプト解説リンク */}
+      <section className="pt-2">
+        <div className="text-[10px] text-neutral-500 uppercase mb-2">
+          まずは知っておきたい
+        </div>
+        <div className="space-y-1.5">
+          <ConceptCard
+            title="4サイクル制とは"
+            body={
+              <>
+                重量を <strong>75% → 80% → 85% → 50% (Deload)</strong>{' '}
+                の4段階で循環させることで効率的に筋力アップ。サイクル進行は手動
+                (ホームの「次へ」ボタン)。Deload は神経系の回復に重要。
+              </>
+            }
+          />
+          <ConceptCard
+            title="ピリオダイゼーション ON/OFF"
+            body={
+              <>
+                種目ごとに切替可能。<strong>ON</strong>{' '}
+                でサイクル係数 (75/80/85/50%) を適用、
+                <strong>OFF</strong> で常に基準KGの 100%。
+                ⚠️ 4サイクル目だけは ON が1つでもあれば全種目 50% に統一されます (Deload 確実化)。
+              </>
+            }
+          />
+          <ConceptCard
+            title="変動セットとは"
+            body={
+              <>
+                同セッション内で重量を変える方式。
+                <br />
+                <strong>ストレート</strong> (全セット同重量) /{' '}
+                <strong>アセンディング</strong> (前セットから %増) /{' '}
+                <strong>ドロップ</strong> (前セットから %減)。
+              </>
+            }
+          />
+        </div>
+      </section>
+
+      {onShowGuide && (
+        <button
+          type="button"
+          onClick={onShowGuide}
+          className="w-full h-11 rounded-xl bg-neutral-900 border border-neutral-800 text-neutral-300 text-sm font-semibold flex items-center justify-center gap-2 active:scale-[0.99]"
+        >
+          <BookOpen size={14} /> 詳しい使い方ガイド
+        </button>
+      )}
+    </div>
+  );
+}
+
+function ConceptCard({
+  title,
+  body,
+}: {
+  title: string;
+  body: React.ReactNode;
+}) {
+  const [open, setOpen] = useState(false);
+  return (
+    <div className="rounded-lg bg-neutral-900 border border-neutral-800 overflow-hidden">
+      <button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        className="w-full px-3 py-2 flex items-center justify-between text-left"
+      >
+        <span className="text-xs font-semibold text-amber-300">{title}</span>
+        {open ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+      </button>
+      {open && (
+        <div className="px-3 pb-3 text-[11px] text-neutral-300 leading-relaxed border-t border-neutral-800 pt-2">
+          {body}
+        </div>
+      )}
     </div>
   );
 }
@@ -527,7 +761,33 @@ function ExerciseEditor({
       </div>
 
       <div className="grid grid-cols-3 gap-2">
-        <Field label="基準kg">
+        <Field
+          label="基準kg"
+          help={{
+            title: '基準KG とは',
+            body: (
+              <>
+                <p>サイクル係数を掛ける元になる重量です。</p>
+                <p>
+                  例: 基準KG が <strong>100kg</strong> でピリオダイゼーション
+                  ON の場合
+                </p>
+                <ul className="list-disc list-inside text-neutral-300">
+                  <li>Cycle 1 → 75kg</li>
+                  <li>Cycle 2 → 80kg</li>
+                  <li>Cycle 3 → 85kg</li>
+                  <li>Cycle 4 → 50kg (Deload)</li>
+                </ul>
+                <p className="text-neutral-400">
+                  ※ 0.5 kg 単位で自動丸め
+                </p>
+                <p className="text-neutral-400">
+                  自分の最大挙上重量(1RM)、または「ちょっと余裕がある重量」を入れるのが目安。
+                </p>
+              </>
+            ),
+          }}
+        >
           <NumberInput
             value={exercise.baseWeight}
             min={0}
@@ -562,7 +822,31 @@ function ExerciseEditor({
 
       {/* ピリオダイゼーション */}
       <label className="flex items-center justify-between bg-neutral-900 rounded px-2 py-1.5">
-        <span className="text-xs">ピリオダイゼーション</span>
+        <span className="text-xs flex items-center gap-1">
+          ピリオダイゼーション
+          <HelpIcon
+            title="ピリオダイゼーション"
+            body={
+              <>
+                <p>
+                  この種目に <strong>4サイクル制</strong>{' '}
+                  (75/80/85/50%) を適用するか:
+                </p>
+                <ul className="list-disc list-inside text-neutral-300">
+                  <li>
+                    <strong>ON</strong>: サイクルに応じて重量が変動 (主にコンパウンド種目)
+                  </li>
+                  <li>
+                    <strong>OFF</strong>: 常に基準KGの 100% (アイソレーション種目向き)
+                  </li>
+                </ul>
+                <p className="text-neutral-400">
+                  ⚠️ 4サイクル目は ON が1つでもあれば全種目 50% (Deload確実化)。
+                </p>
+              </>
+            }
+          />
+        </span>
         <input
           type="checkbox"
           checked={exercise.periodizationEnabled}
@@ -573,7 +857,32 @@ function ExerciseEditor({
 
       {/* 変動セット */}
       <div className="grid grid-cols-2 gap-2">
-        <Field label="セット種別">
+        <Field
+          label="セット種別"
+          help={{
+            title: 'セット種別 (変動セット)',
+            body: (
+              <>
+                <p>1セッション内でセットごとの重量パターンを選択:</p>
+                <ul className="list-disc list-inside text-neutral-300 space-y-1">
+                  <li>
+                    <strong>ストレート</strong>: 全セット同じ重量 (基本)
+                  </li>
+                  <li>
+                    <strong>アセンディング</strong>: 前セットから「増減%」上げる
+                    <br />
+                    例 5%: 80→84→88kg
+                  </li>
+                  <li>
+                    <strong>ドロップ</strong>: 前セットから「増減%」下げる
+                    <br />
+                    例 10%: 80→72→64kg
+                  </li>
+                </ul>
+              </>
+            ),
+          }}
+        >
           <select
             value={exercise.variation.mode}
             onChange={(e) =>
@@ -614,10 +923,21 @@ function ExerciseEditor({
   );
 }
 
-function Field({ label, children }: { label: string; children: React.ReactNode }) {
+function Field({
+  label,
+  help,
+  children,
+}: {
+  label: string;
+  help?: { title: string; body: React.ReactNode };
+  children: React.ReactNode;
+}) {
   return (
     <label className="block">
-      <span className="text-[10px] text-neutral-500 uppercase">{label}</span>
+      <span className="text-[10px] text-neutral-500 uppercase flex items-center gap-1">
+        {label}
+        {help && <HelpIcon title={help.title} body={help.body} size={11} />}
+      </span>
       <div className="mt-0.5">{children}</div>
     </label>
   );

@@ -10,7 +10,11 @@ import { useAuth } from '../context/AuthContext';
 
 type Mode = 'signin' | 'signup';
 
-export function AuthScreen() {
+interface Props {
+  onShowGuide?: () => void;
+}
+
+export function AuthScreen({ onShowGuide }: Props = {}) {
   const { signIn, signUp } = useAuth();
   const [mode, setMode] = useState<Mode>('signin');
   const [email, setEmail] = useState('');
@@ -171,6 +175,16 @@ export function AuthScreen() {
           <br />
           利用は完全無料です。
         </p>
+
+        {onShowGuide && (
+          <button
+            type="button"
+            onClick={onShowGuide}
+            className="mt-3 mx-auto block text-[11px] text-amber-400 hover:text-amber-300 underline-offset-2 hover:underline"
+          >
+            使い方を見る →
+          </button>
+        )}
       </div>
     </div>
   );
