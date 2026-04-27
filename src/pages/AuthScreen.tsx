@@ -3,11 +3,11 @@ import {
   AlertCircle,
   ArrowLeft,
   CheckCircle2,
-  Dumbbell,
   Lock,
   Mail,
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { BearLiftIcon } from '../components/BearLiftIcon';
 
 type Mode = 'signin' | 'signup' | 'forgot' | 'reset';
 
@@ -104,8 +104,8 @@ export function AuthScreen({ onShowGuide }: Props = {}) {
       <div className="max-w-md mx-auto w-full px-6 py-10 flex-1 flex flex-col justify-center">
         {/* ロゴ */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-amber-500/20 border border-amber-500/30 rounded-2xl mb-3">
-            <Dumbbell size={28} className="text-amber-400" />
+          <div className="inline-flex items-center justify-center w-24 h-24 bg-amber-500/20 border border-amber-500/30 rounded-2xl mb-3">
+            <BearLiftIcon size={68} className="text-amber-400" />
           </div>
           <h1 className="text-2xl font-bold tracking-tight">
             <span className="text-amber-400">macho</span> up
