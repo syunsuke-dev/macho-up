@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 import { AppProvider } from './context/AppContext';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { MobileLayout } from './components/MobileLayout';
@@ -40,6 +40,9 @@ export function App() {
   );
 }
 
+/** ログイン済みユーザー向けのスプラッシュ最低表示時間 (ms) */
+const SPLASH_MIN_MS = 600;
+
 function AuthGate({
   children,
   openGuide,
@@ -48,19 +51,43 @@ function AuthGate({
   openGuide: () => void;
 }) {
   const { session, loading, isPasswordRecovery } = useAuth();
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-xs text-neutral-400">起動中...</div>
-      </div>
-    );
+  const [splashHoldDone, setSplashHoldDone] = useState(false);
+
+  // 認証ロード完了後、ログイン済みユーザーには SPLASH_MIN_MS のあいだロゴだけ見せる
+  useEffect(() => {
+    if (loading) return;
+    if (!session || isPasswordRecovery) {
+      // 未ログイン or リカバリ中はスプラッシュを延長しない
+      setSplashHoldDone(true);
+      return;
+    }
+    const t = setTimeout(() => setSplashHoldDone(true), SPLASH_MIN_MS);
+    return () => clearTimeout(t);
+  }, [loading, session, isPasswordRecovery]);
+
+  // 認証チェック中、またはログイン済みでまだスプラッシュ最低時間に達していない間
+  if (loading || (session && !isPasswordRecovery && !splashHoldDone)) {
+    return <SplashScreen />;
   }
+
   // パスワード再設定リンクから入った場合は、たとえセッションがあっても
   // 新パスワード設定画面 (AuthScreen の reset モード) を出す
   if (!session || isPasswordRecovery) {
     return <AuthScreen onShowGuide={openGuide} />;
   }
   return <>{children}</>;
+}
+
+function SplashScreen() {
+  return (
+    <div className="min-h-screen bg-neutral-950 flex items-center justify-center">
+      <img
+        src="/macho-up-logo.png"
+        alt="macho up"
+        className="w-44 h-44 object-contain animate-pulse"
+      />
+    </div>
+  );
 }
 
 function MainApp({ openGuide }: { openGuide: () => void }) {
