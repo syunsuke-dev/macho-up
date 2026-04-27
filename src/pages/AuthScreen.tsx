@@ -104,8 +104,8 @@ export function AuthScreen({ onShowGuide }: Props = {}) {
       <div className="max-w-md mx-auto w-full px-6 py-10 flex-1 flex flex-col justify-center">
         {/* ロゴ */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-24 h-24 bg-amber-500/20 border border-amber-500/30 rounded-2xl mb-3">
-            <BearLiftIcon size={68} className="text-amber-400" />
+          <div className="inline-flex items-center justify-center w-24 h-24 bg-amber-500/20 border border-amber-500/30 rounded-2xl mb-3 p-1">
+            <BearLiftIcon size={88} className="text-amber-400" />
           </div>
           <h1 className="text-2xl font-bold tracking-tight">
             <span className="text-amber-400">macho</span> up
