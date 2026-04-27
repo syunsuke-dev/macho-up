@@ -7,9 +7,13 @@
   </defs>
   <rect width="180" height="180" fill="url(#bg)" rx="32"/>
   <g transform="translate(7,7) scale(7.0833)">
-    <rect x="3" y="2.6" width="18" height="0.85" rx="0.42" fill="#2d2840" stroke="#1a1530" stroke-width="0.3"/>
-    <rect x="1.7" y="2" width="1.4" height="2.1" rx="0.35" fill="#2d2840" stroke="#1a1530" stroke-width="0.3"/>
-    <rect x="20.9" y="2" width="1.4" height="2.1" rx="0.35" fill="#2d2840" stroke="#1a1530" stroke-width="0.3"/>
+    <path d="M 0.3 2.5 Q 12 3.0 23.7 2.5 L 23.7 3.35 Q 12 3.85 0.3 3.35 Z" fill="#2d2840" stroke="#1a1530" stroke-width="0.3"/>
+    <ellipse cx="1.1" cy="2.95" rx="1.0" ry="2.6" fill="#2d2840" stroke="#1a1530" stroke-width="0.3"/>
+    <ellipse cx="2.4" cy="2.95" rx="0.75" ry="2.1" fill="#2d2840" stroke="#1a1530" stroke-width="0.3"/>
+    <ellipse cx="3.4" cy="2.95" rx="0.5" ry="1.5" fill="#2d2840" stroke="#1a1530" stroke-width="0.3"/>
+    <ellipse cx="20.6" cy="2.95" rx="0.5" ry="1.5" fill="#2d2840" stroke="#1a1530" stroke-width="0.3"/>
+    <ellipse cx="21.6" cy="2.95" rx="0.75" ry="2.1" fill="#2d2840" stroke="#1a1530" stroke-width="0.3"/>
+    <ellipse cx="22.9" cy="2.95" rx="1.0" ry="2.6" fill="#2d2840" stroke="#1a1530" stroke-width="0.3"/>
     <ellipse cx="4.7" cy="8.2" rx="1.55" ry="4.7" fill="#2d2840" stroke="#1a1530" stroke-width="0.4"/>
     <ellipse cx="19.3" cy="8.2" rx="1.55" ry="4.7" fill="#2d2840" stroke="#1a1530" stroke-width="0.4"/>
     <circle cx="4.7" cy="3.5" r="1.4" fill="#2d2840" stroke="#1a1530" stroke-width="0.4"/>

@@ -29,33 +29,66 @@ export function BearLiftIcon({ size = 24, className = '' }: Props) {
       className={className}
       aria-hidden="true"
     >
-      {/* ═══ バーベル ═══ */}
-      <rect
-        x="3"
-        y="2.6"
-        width="18"
-        height="0.85"
-        rx="0.42"
+      {/* ═══ バーベル (重そうに3段プレート + 軽くしなるバー) ═══ */}
+      {/* バー: 重みでわずかに下にしなる */}
+      <path
+        d="M 0.3 2.5 Q 12 3.0 23.7 2.5 L 23.7 3.35 Q 12 3.85 0.3 3.35 Z"
         fill={BODY}
         stroke={OUTLINE}
         strokeWidth={SW_THIN}
       />
-      <rect
-        x="1.7"
-        y="2"
-        width="1.4"
-        height="2.1"
-        rx="0.35"
+      {/* 左プレート: 外側→内側で大→小に積層 */}
+      <ellipse
+        cx="1.1"
+        cy="2.95"
+        rx="1.0"
+        ry="2.6"
         fill={BODY}
         stroke={OUTLINE}
         strokeWidth={SW_THIN}
       />
-      <rect
-        x="20.9"
-        y="2"
-        width="1.4"
-        height="2.1"
-        rx="0.35"
+      <ellipse
+        cx="2.4"
+        cy="2.95"
+        rx="0.75"
+        ry="2.1"
+        fill={BODY}
+        stroke={OUTLINE}
+        strokeWidth={SW_THIN}
+      />
+      <ellipse
+        cx="3.4"
+        cy="2.95"
+        rx="0.5"
+        ry="1.5"
+        fill={BODY}
+        stroke={OUTLINE}
+        strokeWidth={SW_THIN}
+      />
+      {/* 右プレート (鏡像) */}
+      <ellipse
+        cx="20.6"
+        cy="2.95"
+        rx="0.5"
+        ry="1.5"
+        fill={BODY}
+        stroke={OUTLINE}
+        strokeWidth={SW_THIN}
+      />
+      <ellipse
+        cx="21.6"
+        cy="2.95"
+        rx="0.75"
+        ry="2.1"
+        fill={BODY}
+        stroke={OUTLINE}
+        strokeWidth={SW_THIN}
+      />
+      <ellipse
+        cx="22.9"
+        cy="2.95"
+        rx="1.0"
+        ry="2.6"
         fill={BODY}
         stroke={OUTLINE}
         strokeWidth={SW_THIN}
