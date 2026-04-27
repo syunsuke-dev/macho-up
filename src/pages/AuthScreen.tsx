@@ -7,7 +7,6 @@ import {
   Mail,
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
-import { BearLiftIcon } from '../components/BearLiftIcon';
 
 type Mode = 'signin' | 'signup' | 'forgot' | 'reset';
 
@@ -102,15 +101,14 @@ export function AuthScreen({ onShowGuide }: Props = {}) {
   return (
     <div className="min-h-screen bg-neutral-950 text-neutral-100 flex flex-col">
       <div className="max-w-md mx-auto w-full px-6 py-10 flex-1 flex flex-col justify-center">
-        {/* ロゴ */}
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-24 h-24 bg-pink-100 border-2 border-pink-200/50 rounded-2xl mb-3 p-1 shadow-lg shadow-pink-500/10">
-            <BearLiftIcon size={88} />
-          </div>
-          <h1 className="text-2xl font-bold tracking-tight">
-            <span className="text-amber-400">macho</span> up
-          </h1>
-          <p className="text-xs text-neutral-400 mt-1">
+        {/* ロゴ画像 */}
+        <div className="text-center mb-6">
+          <img
+            src="/macho-up-logo.png"
+            alt="macho up"
+            className="mx-auto w-44 h-44 object-contain mb-2"
+          />
+          <p className="text-xs text-neutral-400">
             ロジカルなトレーニング管理
           </p>
         </div>
