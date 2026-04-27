@@ -1,12 +1,19 @@
-import { CalendarDays, ClipboardList, Dumbbell, Home, LineChart, Settings } from 'lucide-react';
-import type { ComponentType } from 'react';
+import {
+  CalendarDays,
+  ClipboardList,
+  Dumbbell,
+  Home,
+  LineChart,
+  Settings,
+  type LucideIcon,
+} from 'lucide-react';
 
 export type TabKey = 'home' | 'plan' | 'calendar' | 'log' | 'chart' | 'settings';
 
 interface NavItem {
   key: TabKey;
   label: string;
-  icon: ComponentType<{ size?: number; className?: string }>;
+  icon: LucideIcon;
 }
 
 const ITEMS: NavItem[] = [
