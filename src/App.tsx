@@ -47,7 +47,7 @@ function AuthGate({
   children: ReactNode;
   openGuide: () => void;
 }) {
-  const { session, loading } = useAuth();
+  const { session, loading, isPasswordRecovery } = useAuth();
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -55,7 +55,11 @@ function AuthGate({
       </div>
     );
   }
-  if (!session) return <AuthScreen onShowGuide={openGuide} />;
+  // パスワード再設定リンクから入った場合は、たとえセッションがあっても
+  // 新パスワード設定画面 (AuthScreen の reset モード) を出す
+  if (!session || isPasswordRecovery) {
+    return <AuthScreen onShowGuide={openGuide} />;
+  }
   return <>{children}</>;
 }
 

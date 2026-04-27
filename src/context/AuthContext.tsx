@@ -12,13 +12,9 @@ interface AuthContextValue {
   session: Session | null;
   user: User | null;
   loading: boolean;
+  /** パスワード再設定リンクから入った直後 (true の間は新パスワード入力 UI を出す) */
+  isPasswordRecovery: boolean;
   signIn: (email: string, password: string) => Promise<{ error?: string }>;
-  /**
-   * @returns
-   *  - error: エラー文言
-   *  - needsConfirmation: メール確認が必要 (Supabase 側で email confirmation が ON の場合)
-   *  - signedIn: true なら即ログイン成功
-   */
   signUp: (
     email: string,
     password: string,
@@ -28,6 +24,16 @@ interface AuthContextValue {
     signedIn?: boolean;
   }>;
   signOut: () => Promise<void>;
+  /** パスワード再設定メールを送信 */
+  sendPasswordResetEmail: (
+    email: string,
+  ) => Promise<{ error?: string; sent?: boolean }>;
+  /** パスワードを更新 (recovery セッション中に呼ばれる想定) */
+  updatePassword: (
+    newPassword: string,
+  ) => Promise<{ error?: string; ok?: boolean }>;
+  /** リカバリ完了後、フラグをクリア */
+  clearPasswordRecovery: () => void;
 }
 
 const Ctx = createContext<AuthContextValue | null>(null);
@@ -35,6 +41,7 @@ const Ctx = createContext<AuthContextValue | null>(null);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isPasswordRecovery, setIsPasswordRecovery] = useState(false);
 
   useEffect(() => {
     let mounted = true;
@@ -49,8 +56,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // セッション変更監視
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, sess) => {
+    } = supabase.auth.onAuthStateChange((event, sess) => {
       if (!mounted) return;
+      // パスワードリカバリリンクからの遷移を検知
+      if (event === 'PASSWORD_RECOVERY') {
+        setIsPasswordRecovery(true);
+      }
       setSession(sess);
       setLoading(false);
     });
@@ -83,6 +94,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signOut = async () => {
     await supabase.auth.signOut();
+    setIsPasswordRecovery(false);
     // ローカル残骸を一掃 (option B)
     try {
       localStorage.removeItem('machoup:v1');
@@ -91,15 +103,42 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const sendPasswordResetEmail: AuthContextValue['sendPasswordResetEmail'] =
+    async (email) => {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        // メール内のリンクをクリックすると、このURLに戻ってくる
+        // (Supabase はここに #access_token=...&type=recovery を付加する)
+        redirectTo: `${window.location.origin}/`,
+      });
+      if (error) return { error: prettyError(error.message) };
+      return { sent: true };
+    };
+
+  const updatePassword: AuthContextValue['updatePassword'] = async (
+    newPassword,
+  ) => {
+    const { error } = await supabase.auth.updateUser({
+      password: newPassword,
+    });
+    if (error) return { error: prettyError(error.message) };
+    return { ok: true };
+  };
+
+  const clearPasswordRecovery = () => setIsPasswordRecovery(false);
+
   return (
     <Ctx.Provider
       value={{
         session,
         user: session?.user ?? null,
         loading,
+        isPasswordRecovery,
         signIn,
         signUp,
         signOut,
+        sendPasswordResetEmail,
+        updatePassword,
+        clearPasswordRecovery,
       }}
     >
       {children}
