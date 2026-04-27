@@ -41,7 +41,7 @@ export function App() {
 }
 
 /** ログイン済みユーザー向けのスプラッシュ最低表示時間 (ms) */
-const SPLASH_MIN_MS = 600;
+const SPLASH_MIN_MS = 1000;
 
 function AuthGate({
   children,
@@ -80,12 +80,20 @@ function AuthGate({
 
 function SplashScreen() {
   return (
-    <div className="min-h-screen bg-neutral-950 flex items-center justify-center">
+    <div className="min-h-screen bg-neutral-950 flex flex-col items-center justify-center gap-4">
       <img
         src="/macho-up-logo.png"
         alt="macho up"
         className="w-44 h-44 object-contain animate-pulse"
       />
+      <div className="flex items-center gap-2 text-neutral-400">
+        {/* スピナー */}
+        <span
+          className="inline-block w-3.5 h-3.5 rounded-full border-2 border-neutral-600 border-t-amber-400 animate-spin"
+          aria-hidden="true"
+        />
+        <span className="text-xs tracking-wide">Loading...</span>
+      </div>
     </div>
   );
 }
