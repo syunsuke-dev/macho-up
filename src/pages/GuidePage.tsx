@@ -9,6 +9,7 @@ import {
   Home as HomeIcon,
   LineChart,
   Settings as SettingsIcon,
+  X,
 } from 'lucide-react';
 
 interface Props {
@@ -21,18 +22,30 @@ export function GuidePage({ onClose }: Props) {
       <div className="max-w-md mx-auto min-h-screen flex flex-col">
         {/* ヘッダ */}
         <header
-          className="sticky top-0 z-10 bg-neutral-950/95 backdrop-blur border-b border-neutral-800 px-3 h-14 flex items-center gap-2"
+          className="sticky top-0 z-10 bg-neutral-950/95 backdrop-blur border-b border-neutral-800 px-3 h-14 flex items-center justify-between gap-2"
           style={{ paddingTop: 'env(safe-area-inset-top)' }}
         >
+          <div className="flex items-center gap-2 min-w-0">
+            <button
+              type="button"
+              onClick={onClose}
+              className="w-10 h-10 rounded-lg flex items-center justify-center text-neutral-300 hover:bg-neutral-800"
+              aria-label="戻る"
+            >
+              <ArrowLeft size={20} />
+            </button>
+            <h1 className="text-base font-bold truncate">使い方ガイド</h1>
+          </div>
+          {/* 右上: 閉じるボタン */}
           <button
             type="button"
             onClick={onClose}
-            className="w-10 h-10 rounded-lg flex items-center justify-center text-neutral-300 hover:bg-neutral-800"
+            className="flex items-center gap-1 h-9 px-3 rounded-lg bg-neutral-800 hover:bg-neutral-700 text-neutral-200 text-xs font-semibold flex-shrink-0"
             aria-label="閉じる"
           >
-            <ArrowLeft size={20} />
+            <X size={14} />
+            閉じる
           </button>
-          <h1 className="text-base font-bold">使い方ガイド</h1>
         </header>
 
         <main className="flex-1 px-4 py-5 space-y-6">
@@ -357,6 +370,17 @@ export function GuidePage({ onClose }: Props) {
               ネイティブアプリ風に起動できます (PWA)。
             </Accordion>
           </Section>
+
+          {/* 最下部の閉じるボタン */}
+          <section className="pt-2 pb-2">
+            <button
+              type="button"
+              onClick={onClose}
+              className="w-full h-12 rounded-xl bg-neutral-800 hover:bg-neutral-700 text-neutral-100 text-sm font-semibold flex items-center justify-center gap-2 active:scale-[0.99] transition"
+            >
+              <X size={16} /> ガイドを閉じる
+            </button>
+          </section>
 
           {/* フッター */}
           <section className="text-[10px] text-neutral-500 text-center pb-8">
