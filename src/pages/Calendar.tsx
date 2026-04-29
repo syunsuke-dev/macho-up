@@ -2,12 +2,14 @@ import { useMemo, useState } from 'react';
 import { CalendarDays, ChevronLeft, ChevronRight, Dot } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { todayISO } from '../lib/schedule';
+import { DayDetailSheet } from '../components/DayDetailSheet';
 
 const WEEKDAY_JP = ['日', '月', '火', '水', '木', '金', '土'];
 
 export function CalendarPage() {
   const { state, routineMap } = useApp();
   const [monthOffset, setMonthOffset] = useState(0);
+  const [selectedDate, setSelectedDate] = useState<string | null>(null);
 
   const today = todayISO();
   const now = new Date();
@@ -80,6 +82,7 @@ export function CalendarPage() {
         today={today}
         entries={state.schedule?.entries ?? []}
         routineColors={routineColorMap(state.routines.map((r) => r.id))}
+        onSelectDate={setSelectedDate}
       />
 
       {/* リスト */}
@@ -106,12 +109,14 @@ export function CalendarPage() {
               const isMissed = isPast && !e.done;
 
               return (
-                <li
-                  key={e.date}
-                  className={`grid grid-cols-[72px_1fr_72px] gap-2 px-3 py-2.5 items-center ${
-                    isToday ? 'bg-amber-500/10' : ''
-                  }`}
-                >
+                <li key={e.date}>
+                  <button
+                    type="button"
+                    onClick={() => setSelectedDate(e.date)}
+                    className={`w-full grid grid-cols-[72px_1fr_72px] gap-2 px-3 py-2.5 items-center text-left active:bg-neutral-800/40 transition-colors ${
+                      isToday ? 'bg-amber-500/10' : ''
+                    }`}
+                  >
                   {/* 予定日 */}
                   <div>
                     <div
@@ -159,6 +164,7 @@ export function CalendarPage() {
                       <div className="text-xs text-neutral-500">—</div>
                     )}
                   </div>
+                  </button>
                 </li>
               );
             })}
@@ -168,7 +174,17 @@ export function CalendarPage() {
 
       <p className="text-[11px] text-neutral-500 text-center">
         予定日・実施日がズレる場合はリスケまたは手動ログに起因します
+        <br />
+        日付タップでリスケが可能です
       </p>
+
+      {/* 日付タップで開く詳細モーダル */}
+      {selectedDate && (
+        <DayDetailSheet
+          date={selectedDate}
+          onClose={() => setSelectedDate(null)}
+        />
+      )}
     </div>
   );
 }
@@ -181,6 +197,7 @@ interface MonthGridProps {
   today: string;
   entries: { date: string; routineId: string | null; done: boolean }[];
   routineColors: Record<string, string>;
+  onSelectDate: (date: string) => void;
 }
 
 /** 6種類のパレット (ルーティンに順に割り当て) */
@@ -205,7 +222,7 @@ function pad(n: number) {
   return String(n).padStart(2, '0');
 }
 
-function MonthGrid({ year, month, today, entries, routineColors }: MonthGridProps) {
+function MonthGrid({ year, month, today, entries, routineColors, onSelectDate }: MonthGridProps) {
   const { routineMap } = useApp();
   const firstWeekday = new Date(year, month, 1).getDay(); // 0..6
   const daysInMonth = new Date(year, month + 1, 0).getDate();
@@ -290,9 +307,11 @@ function MonthGrid({ year, month, today, entries, routineColors }: MonthGridProp
           const dimCls = isPast && !cell.done && routine ? 'opacity-50' : '';
 
           return (
-            <div
+            <button
               key={cell.date}
-              className={`${base} ${borderCls} ${bgCls} ${dimCls}`}
+              type="button"
+              onClick={() => onSelectDate(cell.date)}
+              className={`${base} ${borderCls} ${bgCls} ${dimCls} active:scale-[0.96] transition-transform`}
               title={routine ? `${cell.date} ${routine.name}` : cell.date}
             >
               <div
@@ -315,7 +334,7 @@ function MonthGrid({ year, month, today, entries, routineColors }: MonthGridProp
               {cell.done && (
                 <div className="absolute top-0.5 right-0.5 w-1.5 h-1.5 rounded-full bg-emerald-400" />
               )}
-            </div>
+            </button>
           );
         })}
       </div>
