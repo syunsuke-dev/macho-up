@@ -56,6 +56,8 @@ type Action =
     }
   | { type: 'RESCHEDULE'; fromDate: string }
   | { type: 'RESCHEDULE_SINGLE_DAY'; fromDate: string }
+  | { type: 'SET_DAY_ROUTINE'; date: string; routineId: string | null }
+  | { type: 'RESTORE_SCHEDULE'; schedule: Schedule }
   | { type: 'ADD_LOG'; log: Log }
   | { type: 'MARK_DONE'; date: string };
 
@@ -178,6 +180,27 @@ function reducer(state: PersistedState, action: Action): PersistedState {
         ...state,
         schedule: rescheduleSingleDay(state.schedule, action.fromDate),
       };
+    case 'SET_DAY_ROUTINE': {
+      if (!state.schedule) return state;
+      // 該当日のエントリの routineId を上書き (done フラグはリセット)
+      const found = state.schedule.entries.some((e) => e.date === action.date);
+      const entries = found
+        ? state.schedule.entries.map((e) =>
+            e.date === action.date
+              ? { ...e, routineId: action.routineId, done: false }
+              : e,
+          )
+        : [
+            ...state.schedule.entries,
+            { date: action.date, routineId: action.routineId, done: false },
+          ].sort((a, b) => a.date.localeCompare(b.date));
+      return {
+        ...state,
+        schedule: { ...state.schedule, entries },
+      };
+    }
+    case 'RESTORE_SCHEDULE':
+      return { ...state, schedule: action.schedule };
     case 'ADD_LOG':
       return { ...state, logs: [action.log, ...state.logs] };
     case 'MARK_DONE':
@@ -247,6 +270,8 @@ async function persistAction(
     case 'RESCHEDULE':
     case 'RESCHEDULE_SINGLE_DAY':
     case 'MARK_DONE':
+    case 'SET_DAY_ROUTINE':
+    case 'RESTORE_SCHEDULE':
       if (next.schedule) await saveSchedule(userId, next.schedule);
       return;
     case 'ADD_LOG':
@@ -257,11 +282,26 @@ async function persistAction(
 
 // ===== Context =====
 
+interface UndoToken {
+  /** 復元用のスケジュールスナップショット */
+  schedule: Schedule;
+  /** 表示用ラベル */
+  label: string;
+  /** 一意なID (タイムアウト管理用) */
+  id: number;
+}
+
 interface AppContextValue {
   state: PersistedState;
   dispatch: Dispatch<Action>;
   exerciseMap: Record<string, Exercise>;
   routineMap: Record<string, Routine>;
+  /** 直近のリスケ Undo 情報 (null = なし) */
+  undo: UndoToken | null;
+  /** Undo を実行 (元のスケジュールに復元) */
+  performUndo: () => void;
+  /** Undo を破棄 */
+  dismissUndo: () => void;
 }
 
 const Ctx = createContext<AppContextValue | null>(null);
@@ -272,6 +312,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   const [state, setState] = useState<PersistedState | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
+  const [undo, setUndo] = useState<UndoToken | null>(null);
 
   // ユーザー切替時にデータロード
   useEffect(() => {
@@ -307,8 +348,22 @@ export function AppProvider({ children }: { children: ReactNode }) {
       if (!userId) return;
       setState((prev) => {
         if (!prev) return prev;
+        // リスケ系アクションは直前のスケジュールを Undo として保持
+        if (
+          (action.type === 'RESCHEDULE' ||
+            action.type === 'RESCHEDULE_SINGLE_DAY') &&
+          prev.schedule
+        ) {
+          setUndo({
+            id: Date.now(),
+            schedule: prev.schedule,
+            label:
+              action.type === 'RESCHEDULE'
+                ? '全体をずらしました'
+                : 'その日のみずらしました',
+          });
+        }
         const next = reducer(prev, action);
-        // fire-and-forget で永続化 (UIブロック防止)
         Promise.resolve()
           .then(() => persistAction(userId, action, prev, next))
           .catch((e) => {
@@ -319,6 +374,21 @@ export function AppProvider({ children }: { children: ReactNode }) {
     },
     [userId],
   );
+
+  const performUndo = useCallback(() => {
+    if (!undo) return;
+    dispatch({ type: 'RESTORE_SCHEDULE', schedule: undo.schedule });
+    setUndo(null);
+  }, [undo, dispatch]);
+
+  const dismissUndo = useCallback(() => setUndo(null), []);
+
+  // Undo は一定時間で自動消滅
+  useEffect(() => {
+    if (!undo) return;
+    const t = setTimeout(() => setUndo(null), 8000);
+    return () => clearTimeout(t);
+  }, [undo]);
 
   const exerciseMap = useMemo(
     () => Object.fromEntries((state?.exercises ?? []).map((e) => [e.id, e])),
@@ -357,7 +427,17 @@ export function AppProvider({ children }: { children: ReactNode }) {
   }
 
   return (
-    <Ctx.Provider value={{ state, dispatch, exerciseMap, routineMap }}>
+    <Ctx.Provider
+      value={{
+        state,
+        dispatch,
+        exerciseMap,
+        routineMap,
+        undo,
+        performUndo,
+        dismissUndo,
+      }}
+    >
       {children}
     </Ctx.Provider>
   );
