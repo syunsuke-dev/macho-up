@@ -82,26 +82,13 @@ export function generateSchedule(
 // ===== Reschedule (スライド) =====
 
 /**
- * 指定日のトレーニングを実施できなかった場合、その日以降の「すべての予定」を
- * 1日ずつ後ろへスライドさせる。オフ日の配置関係 (ルーティンとオフのセット) は維持する。
- *
- * 実装:
- *   1. fromDate より前の entries はそのまま残す (完了済み・過去はロック)。
- *   2. fromDate 以降の entries の date をすべて +1 日。
- *   3. できた空きの fromDate には「オフ日」を挿入 (既に done 済みの当日は触らない)。
- *
- * @param schedule 現在のスケジュール
- * @param fromDate スキップする日付 (yyyy-mm-dd)
+ * 全体ずらす【後ろへ】: 指定日 (トレーニング日想定) 以降を 1 日ずつ後ろへスライド。
+ * fromDate の位置にはオフ日が挿入される。
  */
-export function rescheduleFrom(
-  schedule: Schedule,
-  fromDate: string,
-): Schedule {
+function postponeFrom(schedule: Schedule, fromDate: string): Schedule {
   const before = schedule.entries.filter((e) => e.date < fromDate);
   const after = schedule.entries.filter((e) => e.date >= fromDate);
 
-  // fromDate の既存エントリがあれば「スキップ扱い」にしてオフ日として残す
-  // そして実施予定だったルーティンは翌日以降へ押し出す
   const slid: ScheduleEntry[] = after.map((e) => ({
     ...e,
     date: addDays(e.date, 1),
@@ -122,27 +109,57 @@ export function rescheduleFrom(
 }
 
 /**
- * 「その日のみ」リスケ。
- * 指定日のルーティンを次の最も近いオフ日へ移動し、その日はオフ日にする。
- * 後続のトレーニング予定日には影響しない。
- *
- * 次のオフ日が見つからない場合は rescheduleFrom にフォールバック。
+ * 全体ずらす【前へ】: 指定日 (オフ日想定) 以降の予定を 1 日ずつ前にスライド。
+ * fromDate の位置の「オフ日」は消え、翌日以降のトレーニングが繰り上がる。
  */
-export function rescheduleSingleDay(
+function pullForwardFrom(schedule: Schedule, fromDate: string): Schedule {
+  const before = schedule.entries.filter((e) => e.date < fromDate);
+  const after = schedule.entries.filter((e) => e.date > fromDate);
+
+  const slid: ScheduleEntry[] = after.map((e) => ({
+    ...e,
+    date: addDays(e.date, -1),
+  }));
+
+  return {
+    ...schedule,
+    entries: [...before, ...slid].sort((a, b) =>
+      a.date.localeCompare(b.date),
+    ),
+  };
+}
+
+/**
+ * 全体ずらす: 当日が「トレーニング日」なら後ろへ、「オフ日」なら前倒し。
+ */
+export function rescheduleFrom(
   schedule: Schedule,
   fromDate: string,
 ): Schedule {
+  const entry = schedule.entries.find((e) => e.date === fromDate);
+  if (!entry) {
+    // エントリ自体が無い (=過去にスキップした未来) 場合は postpone 動作で挿入
+    return postponeFrom(schedule, fromDate);
+  }
+  return entry.routineId == null
+    ? pullForwardFrom(schedule, fromDate)
+    : postponeFrom(schedule, fromDate);
+}
+
+/**
+ * その日のみ【トレーニング → 次のオフへ移す】
+ */
+function swapToNextOff(schedule: Schedule, fromDate: string): Schedule {
   const idx = schedule.entries.findIndex((e) => e.date === fromDate);
   if (idx < 0) return schedule;
   const target = schedule.entries[idx];
-  if (target.routineId == null) return schedule; // 元々オフ日
+  if (target.routineId == null) return schedule;
 
-  // 同日以降の最初のオフ日を探す
   const offIdx = schedule.entries.findIndex(
     (e, i) => i > idx && e.routineId == null,
   );
   if (offIdx < 0) {
-    return rescheduleFrom(schedule, fromDate);
+    return postponeFrom(schedule, fromDate);
   }
 
   const movedRoutineId = target.routineId;
@@ -152,6 +169,46 @@ export function rescheduleSingleDay(
     return e;
   });
   return { ...schedule, entries };
+}
+
+/**
+ * その日のみ【次のトレーニング → 今日に前倒し】
+ */
+function pullForwardSingleDay(schedule: Schedule, fromDate: string): Schedule {
+  const idx = schedule.entries.findIndex((e) => e.date === fromDate);
+  if (idx < 0) return schedule;
+  const target = schedule.entries[idx];
+  if (target.routineId != null) return schedule; // 既にトレーニング日なので何もしない
+
+  const trainIdx = schedule.entries.findIndex(
+    (e, i) => i > idx && e.routineId != null,
+  );
+  if (trainIdx < 0) return schedule; // これ以上のトレーニングが無い
+
+  const movedRoutineId = schedule.entries[trainIdx].routineId;
+  const entries = schedule.entries.map((e, i) => {
+    if (i === idx)
+      return { ...e, routineId: movedRoutineId, done: false };
+    if (i === trainIdx) return { ...e, routineId: null, done: false };
+    return e;
+  });
+  return { ...schedule, entries };
+}
+
+/**
+ * その日のみ: 当日の状態によって入替方向が変わる。
+ * - トレーニング日 → 次のオフ日へ移す
+ * - オフ日 → 次のトレーニング日を今日に前倒し
+ */
+export function rescheduleSingleDay(
+  schedule: Schedule,
+  fromDate: string,
+): Schedule {
+  const entry = schedule.entries.find((e) => e.date === fromDate);
+  if (!entry) return schedule;
+  return entry.routineId == null
+    ? pullForwardSingleDay(schedule, fromDate)
+    : swapToNextOff(schedule, fromDate);
 }
 
 /**

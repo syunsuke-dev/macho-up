@@ -173,7 +173,16 @@ export function HomePage({ onGoLog }: Props) {
           <div className="rounded-2xl bg-neutral-900 border border-neutral-800 p-6 text-center text-neutral-400">
             <div className="text-3xl mb-1">💤</div>
             <div className="font-semibold">今日はオフです</div>
-            <div className="text-xs mt-1">しっかり休養を取りましょう</div>
+            <div className="text-xs mt-1 mb-4">しっかり休養を取りましょう</div>
+            {/* オフ日でもリスケボタン (前倒し用) */}
+            <button
+              type="button"
+              onClick={() => setReschedulePickerOpen(true)}
+              className="mx-auto h-11 px-4 rounded-xl bg-neutral-800 hover:bg-neutral-700 text-neutral-200 text-sm font-semibold flex items-center justify-center gap-2"
+            >
+              <SkipForward size={14} />
+              リスケ (前倒し)
+            </button>
           </div>
         )}
       </section>
@@ -272,6 +281,7 @@ export function HomePage({ onGoLog }: Props) {
       {reschedulePickerOpen && (
         <ReschedulePicker
           fromDate={today}
+          isOffDay={!todayRoutine}
           onPickShiftAll={() => {
             dispatch({ type: 'RESCHEDULE', fromDate: today });
             setReschedulePickerOpen(false);
@@ -291,15 +301,25 @@ export function HomePage({ onGoLog }: Props) {
 
 function ReschedulePicker({
   fromDate,
+  isOffDay,
   onPickShiftAll,
   onPickSingleDay,
   onClose,
 }: {
   fromDate: string;
+  isOffDay: boolean;
   onPickShiftAll: () => void;
   onPickSingleDay: () => void;
   onClose: () => void;
 }) {
+  // 方向に応じた説明文
+  const allDesc = isOffDay
+    ? '以降の予定をすべて1日前倒しスライド (今日のオフ日が無くなります)'
+    : '以降の予定をすべて1日後ろにスライド (オフ日構成は維持)';
+  const singleDesc = isOffDay
+    ? '次のトレーニング日を今日に前倒し (他の予定はそのまま)'
+    : '今日の予定だけを次のオフ日に移動 (他の予定はそのまま)';
+
   return (
     <div
       className="fixed inset-0 z-40 flex items-end justify-center bg-black/60 backdrop-blur-sm"
@@ -317,7 +337,12 @@ function ReschedulePicker({
         </div>
 
         <div className="px-4 pt-2 pb-3 border-b border-neutral-800">
-          <div className="text-xs text-neutral-400">リスケ方法を選択</div>
+          <div className="text-xs text-neutral-400">
+            リスケ方法を選択{' '}
+            {isOffDay && (
+              <span className="text-emerald-400 ml-1">(前倒し)</span>
+            )}
+          </div>
           <div className="text-sm font-semibold mt-0.5">
             対象日: <span className="font-mono">{fromDate}</span>
           </div>
@@ -335,7 +360,7 @@ function ReschedulePicker({
             <span className="min-w-0">
               <span className="block text-sm font-bold">全体をずらす</span>
               <span className="block text-[11px] text-neutral-400 mt-0.5">
-                以降の予定をすべて1日後ろにスライド (オフ日構成は維持)
+                {allDesc}
               </span>
             </span>
           </button>
@@ -351,7 +376,7 @@ function ReschedulePicker({
             <span className="min-w-0">
               <span className="block text-sm font-bold">その日のみずらす</span>
               <span className="block text-[11px] text-neutral-400 mt-0.5">
-                今日の予定だけを次のオフ日に移動 (他の予定はそのまま)
+                {singleDesc}
               </span>
             </span>
           </button>
@@ -378,14 +403,13 @@ function DayDetailSheet({
   date: string;
   onClose: () => void;
 }) {
-  const { state, dispatch, exerciseMap, routineMap } = useApp();
+  const { state, exerciseMap, routineMap } = useApp();
   const entry = getEntryByDate(state.schedule, date);
   const routine = entry?.routineId ? routineMap[entry.routineId] : null;
   const d = new Date(date);
   const today = todayISO();
   const isToday = date === today;
   const isPast = date < today;
-  const [editing, setEditing] = useState(false);
 
   const routineExercises = routine
     ? routine.exerciseIds
@@ -393,11 +417,6 @@ function DayDetailSheet({
         .filter((e): e is NonNullable<typeof e> => !!e)
     : [];
   const forceDeload = routineHasAnyPeriodization(routineExercises);
-
-  const setRoutine = (routineId: string | null) => {
-    dispatch({ type: 'SET_DAY_ROUTINE', date, routineId });
-    setEditing(false);
-  };
 
   return (
     <div
@@ -503,79 +522,6 @@ function DayDetailSheet({
                 );
               })}
             </ul>
-          )}
-
-          {/* === 編集セクション === */}
-          {!editing ? (
-            <button
-              type="button"
-              onClick={() => setEditing(true)}
-              className="mt-4 w-full h-11 rounded-lg bg-neutral-800 hover:bg-neutral-700 text-neutral-200 text-sm font-semibold flex items-center justify-center gap-2"
-            >
-              ✏️ この日のメニューを変更
-            </button>
-          ) : (
-            <div className="mt-4 rounded-lg bg-neutral-800/50 border border-neutral-700 p-3">
-              <div className="text-[10px] text-neutral-400 uppercase mb-2">
-                メニュー変更
-              </div>
-              <div className="space-y-1.5">
-                {/* オフにする */}
-                <button
-                  type="button"
-                  onClick={() => setRoutine(null)}
-                  className={`w-full px-3 py-2 rounded-md text-sm font-semibold flex items-center gap-2 transition-colors ${
-                    !routine
-                      ? 'bg-neutral-700 text-neutral-300'
-                      : 'bg-neutral-900 hover:bg-neutral-700/60 text-neutral-200'
-                  }`}
-                >
-                  💤 <span>オフ日にする</span>
-                  {!routine && (
-                    <span className="ml-auto text-[10px] text-neutral-400">
-                      現在
-                    </span>
-                  )}
-                </button>
-                {/* ルーティン一覧 */}
-                {state.routines
-                  .filter((r) => r.enabled !== false)
-                  .sort((a, b) => a.order - b.order)
-                  .map((r) => {
-                    const isActive = routine?.id === r.id;
-                    return (
-                      <button
-                        key={r.id}
-                        type="button"
-                        onClick={() => setRoutine(r.id)}
-                        className={`w-full px-3 py-2 rounded-md text-sm font-semibold flex items-center gap-2 transition-colors ${
-                          isActive
-                            ? 'bg-amber-500/20 text-amber-200 border border-amber-500/40'
-                            : 'bg-neutral-900 hover:bg-neutral-700/60 text-neutral-200'
-                        }`}
-                      >
-                        <Dumbbell size={14} className="text-amber-400" />
-                        <span className="truncate">{r.name}</span>
-                        <span className="ml-auto text-[10px] text-neutral-500">
-                          {r.exerciseIds.length}種目
-                        </span>
-                        {isActive && (
-                          <span className="text-[10px] text-amber-300">
-                            現在
-                          </span>
-                        )}
-                      </button>
-                    );
-                  })}
-              </div>
-              <button
-                type="button"
-                onClick={() => setEditing(false)}
-                className="w-full mt-3 h-9 rounded-md text-xs text-neutral-400 hover:bg-neutral-800"
-              >
-                キャンセル
-              </button>
-            </div>
           )}
         </div>
       </div>
