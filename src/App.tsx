@@ -11,7 +11,6 @@ import { LogPage } from './pages/Log';
 import { ChartPage } from './pages/Chart';
 import { SettingsPage } from './pages/Settings';
 import { GuidePage } from './pages/GuidePage';
-import { UndoToast } from './components/UndoToast';
 
 const TITLES: Record<TabKey, string> = {
   home: 'Home',
@@ -123,16 +122,13 @@ function SplashScreen() {
 function MainApp({ openGuide }: { openGuide: () => void }) {
   const [tab, setTab] = useState<TabKey>('home');
   return (
-    <>
-      <MobileLayout active={tab} onChangeTab={setTab} title={TITLES[tab]}>
-        {tab === 'home' && <HomePage onGoLog={() => setTab('log')} />}
-        {tab === 'plan' && <PlanPage onShowGuide={openGuide} />}
-        {tab === 'calendar' && <CalendarPage />}
-        {tab === 'log' && <LogPage />}
-        {tab === 'chart' && <ChartPage />}
-        {tab === 'settings' && <SettingsPage onShowGuide={openGuide} />}
-      </MobileLayout>
-      <UndoToast />
-    </>
+    <MobileLayout active={tab} onChangeTab={setTab} title={TITLES[tab]}>
+      {tab === 'home' && <HomePage onGoLog={() => setTab('log')} />}
+      {tab === 'plan' && <PlanPage onShowGuide={openGuide} />}
+      {tab === 'calendar' && <CalendarPage />}
+      {tab === 'log' && <LogPage />}
+      {tab === 'chart' && <ChartPage />}
+      {tab === 'settings' && <SettingsPage onShowGuide={openGuide} />}
+    </MobileLayout>
   );
 }
