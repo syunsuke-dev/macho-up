@@ -10,6 +10,68 @@ import { todayISO, getEntryByDate } from '../lib/schedule';
 import { uid } from '../lib/storage';
 import type { ExerciseLog, Log, SetLog } from '../types';
 
+// ===== Draft 保存 (画面遷移・再起動を超えて当日中だけ維持) =====
+
+const DRAFT_KEY_PREFIX = 'machoup:logdraft:';
+
+interface LogDraft {
+  /** 紐付くルーティンID — ルーティン変更時には破棄するため */
+  routineId: string;
+  /** ユーザー入力中の各種目の状態 */
+  exercises: ExerciseLog[];
+  memo: string;
+}
+
+function loadDraft(date: string): LogDraft | null {
+  try {
+    const raw = localStorage.getItem(DRAFT_KEY_PREFIX + date);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    if (!parsed || typeof parsed !== 'object') return null;
+    if (typeof parsed.routineId !== 'string') return null;
+    if (!Array.isArray(parsed.exercises)) return null;
+    return parsed as LogDraft;
+  } catch {
+    return null;
+  }
+}
+
+function saveDraft(date: string, draft: LogDraft) {
+  try {
+    localStorage.setItem(DRAFT_KEY_PREFIX + date, JSON.stringify(draft));
+  } catch {
+    /* noop */
+  }
+}
+
+function clearDraft(date: string) {
+  try {
+    localStorage.removeItem(DRAFT_KEY_PREFIX + date);
+  } catch {
+    /* noop */
+  }
+}
+
+/** 今日以外の日付の Draft を全削除 (翌日以降に持ち越さない) */
+function purgeOldDrafts(today: string) {
+  try {
+    const toRemove: string[] = [];
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (
+        key &&
+        key.startsWith(DRAFT_KEY_PREFIX) &&
+        key !== DRAFT_KEY_PREFIX + today
+      ) {
+        toRemove.push(key);
+      }
+    }
+    toRemove.forEach((k) => localStorage.removeItem(k));
+  } catch {
+    /* noop */
+  }
+}
+
 export function LogPage() {
   const { state, dispatch, exerciseMap, routineMap } = useApp();
   const today = todayISO();
@@ -38,18 +100,56 @@ export function LogPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [routine?.id, state.user.currentCycle]);
 
-  const [draft, setDraft] = useState<ExerciseLog[]>(initialLogs);
-  const [memo, setMemo] = useState('');
+  // Draft (今日のログ作業中の状態) を localStorage から復元
+  // ルーティンが一致する場合のみ復元する
+  const initialFromDraft = useMemo<{
+    exercises: ExerciseLog[];
+    memo: string;
+  } | null>(() => {
+    if (!routine) return null;
+    const saved = loadDraft(today);
+    if (!saved || saved.routineId !== routine.id) return null;
+    return { exercises: saved.exercises, memo: saved.memo };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [today, routine?.id]);
 
-  // routine / cycle 切替時に draft を更新
+  const [draft, setDraft] = useState<ExerciseLog[]>(
+    initialFromDraft?.exercises ?? initialLogs,
+  );
+  const [memo, setMemo] = useState<string>(initialFromDraft?.memo ?? '');
+
+  // 起動時: 過去日付の Draft を一掃 (翌日以降にチェック状態を持ち越さない)
+  useEffect(() => {
+    purgeOldDrafts(today);
+  }, [today]);
+
+  // routine / cycle 切替時: 該当ルーティンに draft があれば復元、無ければ initialLogs
   const sig = useMemo(
     () => `${routine?.id}|${state.user.currentCycle}`,
     [routine?.id, state.user.currentCycle],
   );
   useEffect(() => {
-    setDraft(initialLogs);
+    if (!routine) return;
+    const saved = loadDraft(today);
+    if (saved && saved.routineId === routine.id) {
+      setDraft(saved.exercises);
+      setMemo(saved.memo);
+    } else {
+      setDraft(initialLogs);
+      setMemo('');
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sig]);
+
+  // draft / memo の変更を localStorage に逐次保存
+  useEffect(() => {
+    if (!routine) return;
+    saveDraft(today, {
+      routineId: routine.id,
+      exercises: draft,
+      memo,
+    });
+  }, [draft, memo, routine, today]);
 
   if (!routine) {
     return (
@@ -87,6 +187,8 @@ export function LogPage() {
     };
     dispatch({ type: 'ADD_LOG', log });
     dispatch({ type: 'MARK_DONE', date: today });
+    // 保存完了後、今日の Draft はクリア
+    clearDraft(today);
     alert('記録を保存しました');
   };
 
